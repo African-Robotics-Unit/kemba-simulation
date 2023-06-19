@@ -1,2 +1,2 @@
-# kemba-simulation
+# Kemba Simulation
 Simulink simulation of Kemba
