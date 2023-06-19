@@ -1,0 +1,51 @@
+component PistonDynamics
+    % Reduced order pneumatic model
+    % First-order plus deadtime damper piston model
+
+parameters
+    Fe_max = {282, 'N'}; % Extend force 324N
+    Fr_max = {230, 'N'}; % Retract force 260N
+    cu = {25, 'N*s/m'}; % Unactuated damping
+    cd = {59, 'N*s/m'}; % Double extending damping
+    ce = {97, 'N*s/m'}; % Extending damping
+    cr = {84, 'N*s/m'}; % Retracting damping
+    tau_min = {8, 'ms'}; % Time constant
+    tau_max = {24, 'ms'}; % Time constant
+    dead_time = {6, 'ms'}; % Dead-time
+    stroke = {70, 'mm'}; % Stroke
+end
+
+variables
+    Fe = {0, 'N'};
+    Fr = {0, 'N'};
+end
+
+inputs
+    ue = {0, '1' } % ue:left
+    ur = {0, '1' } % ur:left
+    p = {0, 'm'} % p:left
+    v = {0, 'm/s' } % v:left
+end
+
+outputs
+    F = {0, 'N' } % F:right
+end
+
+intermediates
+    ue_d = delay(ue, dead_time);
+    ur_d = delay(ur, dead_time);
+    c = ce*ue_d*(1-ur_d) + cr*ur_d*(1-ue_d) + cd*ue_d*ur_d + cu*(1-ue_d-ur_d+ue_d*ur_d); % Damping
+    pe = p;
+    pr = stroke - p;
+    m = (tau_max-tau_min)/stroke;
+end
+
+equations
+    Fe == ue_d*Fe_max - (m*pe+tau_min)*Fe.der;
+    Fr == ur_d*Fr_max - (m*pr+tau_min)*Fr.der;
+%     Fe == ue_d*Fe_max - (tau_min)*Fe.der;
+%     Fr == ur_d*Fr_max - (tau_min)*Fr.der;
+    F == Fe - Fr - v*c;
+end
+
+end
